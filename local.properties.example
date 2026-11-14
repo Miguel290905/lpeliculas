@@ -1,0 +1,4 @@
+## Copia este fichero como "local.properties" (en la raíz del proyecto, junto a settings.gradle)
+## y escribe tu clave de la API de Google. "local.properties" NO se sube a GitHub (está en .gitignore).
+## Android Studio añade también la línea sdk.dir=... automáticamente; no la borres.
+MAPS_API_KEY=PEGA_AQUI_TU_CLAVE

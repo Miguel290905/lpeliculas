@@ -1,0 +1,5 @@
+// Fichero de configuración del proyecto completo (nivel raíz).
+// Solo declara la versión del plugin de Android; la configuración real está en app/build.gradle
+plugins {
+    id 'com.android.application' version '8.5.2' apply false
+}
