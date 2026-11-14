@@ -1,59 +1,47 @@
 # iPeliculas
 
-Aplicación Android en Java que muestra una cartelera de cine.
-Proyecto evaluable de **Programación Multimedia y Dispositivos Móviles** (2º CFGS DAM, IES Francisco Rodríguez Marín).
+Aplicación Android en Java con una cartelera de cine.
+Proyecto evaluable de Programación Multimedia y Dispositivos Móviles (2º CFGS DAM, IES Francisco Rodríguez Marín).
 
 Autor: Miguel Angel Gonzalez Ortega
 
 ## Funcionalidades
 
-**Requisitos del enunciado**
-
-- `MainActivity`: cartelera con `RecyclerView` animado (las tarjetas entran deslizándose desde abajo y apareciendo gradualmente). Cada tarjeta (`CardView`) muestra título, género, valoración (`RatingBar`) y sinopsis corta.
-- `DetailActivity`: título, género, calificación, sinopsis completa, director y fecha de estreno, con botón de retroceso en la Toolbar.
-- `AboutActivity` ("Acerca de"): información del desarrollador y de la app, con botón de regreso.
+- Cartelera con `RecyclerView` animado y tarjetas (`CardView`): título, género, valoración y sinopsis corta.
+- Detalle de cada película y pantalla "Acerca de", con botón de retroceso.
 - Menú de la Toolbar: **Acerca de**, **Ir al cine** y **Cómo llegar**.
-- **API de Google integrada en la app** (no se abre el navegador ni la app de Google Maps):
-  - **Maps SDK for Android**: el mapa se muestra dentro de `MapActivity`.
-  - **Places API (New)**: busca los cines cercanos; el más cercano se marca en amarillo.
-  - **Routes API**: en "Cómo llegar" dibuja la ruta en coche desde tu ubicación hasta el cine y muestra distancia y tiempo.
-- Diseño oscuro con detalles dorados y rojos, responsive (vertical, horizontal, móvil y tablet).
+- API de Google integrada en la app: Maps SDK (mapa), Places API (cines cercanos) y Routes API (ruta en coche).
+- Extras: buscador, favoritas (guardadas y mostradas primero), filtro "Solo favoritas" y botón de compartir.
 
-**Extras añadidos**
+## Clave de la API de Google (MAPS_API_KEY)
 
-- Buscador por título o género (ignora mayúsculas y tildes).
-- Películas favoritas con persistencia (`SharedPreferences`) y filtro "Solo favoritas".
-- Botón para compartir una película.
-- Solicitud del permiso de ubicación en tiempo de ejecución (si se rechaza, se usa una ubicación por defecto).
-- Mensaje cuando no hay resultados.
-- En "Cómo llegar" se puede pulsar otro cine del mapa para calcular su ruta.
+El mapa, los cines y las rutas necesitan una clave de API propia. **No se incluye en el repositorio**: cada persona usa la suya.
 
-## Estructura
+### Cómo conseguirla
 
-```
-app/src/main/java/com/example/ipeliculas/
-├── MainActivity.java      Cartelera y menú
-├── DetailActivity.java    Detalle de una película
-├── MapActivity.java       Mapa de Google, cines cercanos y ruta
-├── AboutActivity.java     Acerca de
-├── model/                 Movie, Cinema, RouteInfo
-├── data/                  MovieRepository (datos) y FavoritesManager (favoritas)
-├── adapter/MovieAdapter.java   Adapter del RecyclerView y filtros
-├── network/               CinemaFinder (Places), RouteFinder (Routes), HttpHelper, BackgroundRunner
-└── util/                  LocationHelper y PolylineDecoder
-```
+1. Entrar en [Google Cloud Console](https://console.cloud.google.com/) con una cuenta de Google y crear un proyecto.
+2. Activar la facturación del proyecto (la prueba gratuita incluye crédito; conviene crear una alerta de presupuesto).
+3. En *APIs y servicios > Biblioteca*, habilitar estas tres APIs:
+   - **Maps SDK for Android** (dibuja el mapa).
+   - **Places API (New)** (busca los cines cercanos).
+   - **Routes API** (calcula la ruta en coche).
+4. En *APIs y servicios > Credenciales*, pulsar *Crear credenciales > Clave de API* y copiarla. Se recomienda restringirla solo por API (las tres anteriores) y no por aplicación Android, porque Places y Routes se llaman por HTTP.
 
-## Clave de la API de Google (imprescindible para el mapa)
+### Dónde se pone y dónde se usa
 
-1. En [Google Cloud Console](https://console.cloud.google.com/) crea un proyecto y activa la facturación (hay crédito gratuito mensual).
-2. En *APIs y servicios > Biblioteca* habilita: **Maps SDK for Android**, **Places API (New)** y **Routes API**.
-3. En *Credenciales* crea una **clave de API**. Para este proyecto, restringe la clave solo por API (esas tres) y no por aplicación Android, porque Places y Routes se llaman por HTTP.
-4. Copia `local.properties.example` como `local.properties` (raíz del proyecto) y escribe `MAPS_API_KEY=tu_clave`. Si Android Studio ya creó `local.properties`, añade solo esa línea.
-5. `local.properties` está en `.gitignore`: **la clave no se sube a GitHub**.
+1. Copiar `local.properties.example` como `local.properties` (en la raíz del proyecto, junto a `settings.gradle`) y escribir la clave:
+   ```
+   MAPS_API_KEY=tu_clave
+   ```
+   Si Android Studio ya creó `local.properties`, basta con añadir esa línea sin borrar `sdk.dir`. Este archivo está en `.gitignore`, así que no se sube a GitHub.
+2. `app/build.gradle` lee `MAPS_API_KEY` de `local.properties` y la reparte de dos formas:
+   - `manifestPlaceholders`: sustituye `${MAPS_API_KEY}` en `AndroidManifest.xml`, en el `meta-data` `com.google.android.geo.API_KEY`. Con ella el Maps SDK dibuja el mapa.
+   - `buildConfigField`: crea la constante `BuildConfig.MAPS_API_KEY`, que usa `MapActivity` para llamar a Places (`CinemaFinder`) y a Routes (`RouteFinder`).
+3. Si la clave falta, `MapActivity` lo detecta (`BuildConfig.MAPS_API_KEY.isEmpty()`) y muestra un aviso en lugar del mapa.
+4. Después de cambiar la clave, pulsar *Sync Now* y volver a ejecutar la app.
 
 ## Cómo ejecutarlo
 
-1. Abrir la carpeta del proyecto con **Android Studio** (Koala 2024.1.1 o superior, JDK 17).
-2. Configurar la clave de la API (apartado anterior) y esperar a que termine la sincronización de Gradle.
-3. Ejecutar en un emulador con imagen **Google Play** (o `Google APIs`) o en un móvil con Android 8.0 (API 26) o superior, con conexión a internet.
-4. En el emulador, fijar la ubicación en *Extended controls > Location* para probar "Ir al cine" y "Cómo llegar".
+1. Abrir el proyecto con Android Studio (Koala 2024.1.1 o superior, JDK 17) y esperar a la sincronización de Gradle.
+2. Ejecutar en un emulador con imagen Google Play (API 34 recomendada) o en un móvil con Android 8.0 o superior, con internet.
+3. En el emulador, fijar la ubicación en *Extended controls > Location* para probar "Ir al cine" y "Cómo llegar".
